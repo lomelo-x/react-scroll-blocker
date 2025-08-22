@@ -2,7 +2,7 @@
 
 🔒 A modern, React 18 compatible library for preventing body scroll when components are mounted.
 
-[![npm version](https://badge.fury.io/js/react-scroll-blocker.svg)](https://badge.fury.io/js/react-scroll-blocker)
+[![npm version](https://img.shields.io/npm/v/react-scroll-blocker.svg)](https://www.npmjs.com/package/react-scroll-blocker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Why React Scroll Blocker?
