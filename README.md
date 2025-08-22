@@ -290,11 +290,11 @@ React Scroll Blocker is designed as a drop-in replacement for react-scrolllock:
 
 ```tsx
 // Before (react-scrolllock)
-import ScrollBlocker, { TouchScrollable } from 'react-scrolllock'
+import ScrollLock, { TouchScrollable } from 'react-scrolllock'
 
 // After (react-scroll-blocker)
 import ScrollBlocker, { TouchScrollable } from 'react-scroll-blocker'
-// API is identical!
+// Note: Component name changed from ScrollLock to ScrollBlocker
 ```
 
 ### Breaking Changes from react-scrolllock
