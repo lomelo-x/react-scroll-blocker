@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0" />
+		<title>React Scroll Blocker Demo</title>
+		<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+		<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+		<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+		<style>
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+					sans-serif;
+				margin: 0;
+				padding: 20px;
+				line-height: 1.6;
+			}
+
+			.hero {
+				text-align: center;
+				padding: 40px 20px;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				color: white;
+				margin: -20px -20px 40px -20px;
+			}
+
+			.demo-section {
+				margin: 40px 0;
+				padding: 20px;
+				border: 1px solid #e1e5e9;
+				border-radius: 8px;
+				background: #f8f9fa;
+			}
+
+			.tall-content {
+				height: 150vh;
+				background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+				padding: 20px;
+				margin: 20px 0;
+				border-radius: 8px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 18px;
+				color: #666;
+			}
+
+			button {
+				background: #007bff;
+				color: white;
+				border: none;
+				padding: 12px 24px;
+				border-radius: 6px;
+				cursor: pointer;
+				font-size: 16px;
+				margin: 10px;
+				transition: background 0.2s;
+			}
+
+			button:hover {
+				background: #0056b3;
+			}
+
+			button:disabled {
+				background: #6c757d;
+				cursor: not-allowed;
+			}
+
+			.modal {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.5);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				z-index: 1000;
+			}
+
+			.modal-content {
+				background: white;
+				padding: 30px;
+				border-radius: 12px;
+				max-width: 500px;
+				margin: 20px;
+				box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+			}
+
+			.scrollable-modal {
+				position: fixed;
+				top: 10%;
+				bottom: 10%;
+				left: 10%;
+				right: 10%;
+				background: white;
+				border-radius: 12px;
+				overflow: auto;
+				z-index: 1000;
+				box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+			}
+
+			.scrollable-content {
+				padding: 20px;
+			}
+
+			.section {
+				padding: 15px;
+				margin: 10px 0;
+				background: #f8f9fa;
+				border-radius: 6px;
+				border-left: 4px solid #007bff;
+			}
+
+			.status {
+				padding: 10px;
+				margin: 10px 0;
+				border-radius: 6px;
+				font-weight: bold;
+			}
+
+			.status.blocked {
+				background: #fff3cd;
+				color: #856404;
+				border: 1px solid #ffeaa7;
+			}
+
+			.status.unblocked {
+				background: #d1ecf1;
+				color: #0c5460;
+				border: 1px solid #bee5eb;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="hero">
+			<h1>🔒 React Scroll Blocker</h1>
+			<p>A modern, React 18 compatible library for preventing body scroll</p>
+			<p><small>Test the scroll blocking functionality below ↓</small></p>
+		</div>
+
+		<div id="root"></div>
+
+		<script type="text/babel">
+			// Mock ScrollBlocker component for demo
+			const ScrollBlocker = ({ children, isActive = true }) => {
+				React.useEffect(() => {
+					if (!isActive) return
+
+					// Store original styles
+					const originalOverflow = document.body.style.overflow
+					const originalPaddingRight = document.body.style.paddingRight
+
+					// Get scrollbar width
+					const scrollbarWidth =
+						window.innerWidth - document.documentElement.clientWidth
+
+					// Apply scroll lock
+					document.body.style.overflow = 'hidden'
+					if (scrollbarWidth > 0) {
+						document.body.style.paddingRight = `${scrollbarWidth}px`
+					}
+
+					return () => {
+						document.body.style.overflow = originalOverflow
+						document.body.style.paddingRight = originalPaddingRight
+					}
+				}, [isActive])
+
+				return children || null
+			}
+
+			const useScrollBlocker = (isBlocked = false) => {
+				const [blocked, setBlocked] = React.useState(isBlocked)
+
+				const blockScroll = () => setBlocked(true)
+				const unblockScroll = () => setBlocked(false)
+
+				React.useEffect(() => {
+					if (!blocked) return
+
+					const originalOverflow = document.body.style.overflow
+					const originalPaddingRight = document.body.style.paddingRight
+					const scrollbarWidth =
+						window.innerWidth - document.documentElement.clientWidth
+
+					document.body.style.overflow = 'hidden'
+					if (scrollbarWidth > 0) {
+						document.body.style.paddingRight = `${scrollbarWidth}px`
+					}
+
+					return () => {
+						document.body.style.overflow = originalOverflow
+						document.body.style.paddingRight = originalPaddingRight
+					}
+				}, [blocked])
+
+				return { blockScroll, unblockScroll, isBlocked: blocked }
+			}
+
+			const Demo = () => {
+				const [modalOpen, setModalOpen] = React.useState(false)
+				const [scrollableModalOpen, setScrollableModalOpen] =
+					React.useState(false)
+				const [isBlocked, setIsBlocked] = React.useState(false)
+				const { blockScroll, unblockScroll } = useScrollBlocker(isBlocked)
+
+				return (
+					<div>
+						{/* Basic Modal Demo */}
+						<div className='demo-section'>
+							<h2>Basic Modal with ScrollBlocker</h2>
+							<p>This modal prevents background scrolling when open.</p>
+							<button onClick={() => setModalOpen(true)}>Open Modal</button>
+
+							{modalOpen && (
+								<>
+									<ScrollBlocker />
+									<div
+										className='modal'
+										onClick={() => setModalOpen(false)}>
+										<div
+											className='modal-content'
+											onClick={(e) => e.stopPropagation()}>
+											<h3>Modal Title</h3>
+											<p>
+												Try scrolling the background - it should be blocked!
+											</p>
+											<p>
+												You can scroll this text if it's long enough, but the
+												page behind remains locked.
+											</p>
+											<button onClick={() => setModalOpen(false)}>
+												Close Modal
+											</button>
+										</div>
+									</div>
+								</>
+							)}
+						</div>
+
+						{/* Hook Demo */}
+						<div className='demo-section'>
+							<h2>useScrollBlocker Hook</h2>
+							<p>Programmatic control over scroll blocking.</p>
+							<div className={`status ${isBlocked ? 'blocked' : 'unblocked'}`}>
+								Scroll Status: {isBlocked ? 'BLOCKED' : 'UNBLOCKED'}
+							</div>
+							<button onClick={() => setIsBlocked(!isBlocked)}>
+								{isBlocked ? 'Unblock' : 'Block'} Scroll
+							</button>
+							<button onClick={blockScroll}>Manual Block</button>
+							<button onClick={unblockScroll}>Manual Unblock</button>
+						</div>
+
+						{/* Scrollable Modal Demo */}
+						<div className='demo-section'>
+							<h2>Scrollable Modal Content</h2>
+							<p>Modal with scrollable content inside.</p>
+							<button onClick={() => setScrollableModalOpen(true)}>
+								Open Scrollable Modal
+							</button>
+
+							{scrollableModalOpen && (
+								<>
+									<ScrollBlocker />
+									<div className='scrollable-modal'>
+										<div className='scrollable-content'>
+											<div
+												style={{
+													display: 'flex',
+													justifyContent: 'space-between',
+													alignItems: 'center',
+													marginBottom: '20px',
+												}}>
+												<h3>Scrollable Modal</h3>
+												<button onClick={() => setScrollableModalOpen(false)}>
+													✕
+												</button>
+											</div>
+											<p>
+												This modal content is scrollable while the background is
+												blocked.
+											</p>
+
+											{Array.from({ length: 20 }, (_, i) => (
+												<div
+													key={i}
+													className='section'>
+													<h4>Section {i + 1}</h4>
+													<p>
+														This is scrollable content. The background page
+														scroll is blocked, but this modal content remains
+														scrollable.
+													</p>
+												</div>
+											))}
+										</div>
+									</div>
+									<div
+										style={{
+											position: 'fixed',
+											top: 0,
+											left: 0,
+											right: 0,
+											bottom: 0,
+											background: 'rgba(0, 0, 0, 0.5)',
+											zIndex: 999,
+										}}
+										onClick={() => setScrollableModalOpen(false)}
+									/>
+								</>
+							)}
+						</div>
+
+						{/* Tall content for testing scroll */}
+						<div className='tall-content'>
+							<div>
+								<h3>📜 Scroll Test Area</h3>
+								<p>This is a tall section to test scrolling behavior.</p>
+								<p>
+									Try opening the modals above and see if you can scroll this
+									area.
+								</p>
+							</div>
+						</div>
+
+						<div className='tall-content'>
+							<div>
+								<h3>🎯 More Scroll Content</h3>
+								<p>Even more content to scroll through.</p>
+								<p>
+									The scroll blocker should prevent scrolling this when modals
+									are open.
+								</p>
+							</div>
+						</div>
+					</div>
+				)
+			}
+
+			ReactDOM.render(<Demo />, document.getElementById('root'))
+		</script>
+	</body>
+</html>
