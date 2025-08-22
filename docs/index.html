@@ -235,7 +235,11 @@
 				const [scrollableModalOpen, setScrollableModalOpen] =
 					React.useState(false)
 				const [isBlocked, setIsBlocked] = React.useState(false)
-				const { blockScroll, unblockScroll, isBlocked: hookBlocked } = useScrollBlocker()
+				const {
+					blockScroll,
+					unblockScroll,
+					isBlocked: hookBlocked,
+				} = useScrollBlocker()
 
 				return (
 					<div>
@@ -308,10 +312,12 @@ function MyModal() {
 						<div className='demo-section'>
 							<h2>🎮 useScrollBlocker Hook</h2>
 							<p>Programmatic control over scroll blocking.</p>
-							<div className={`status ${hookBlocked ? 'blocked' : 'unblocked'}`}>
+							<div
+								className={`status ${hookBlocked ? 'blocked' : 'unblocked'}`}>
 								Scroll Status: {hookBlocked ? 'BLOCKED' : 'UNBLOCKED'}
 							</div>
-							<button onClick={() => hookBlocked ? unblockScroll() : blockScroll()}>
+							<button
+								onClick={() => (hookBlocked ? unblockScroll() : blockScroll())}>
 								{hookBlocked ? 'Unblock' : 'Block'} Scroll
 							</button>
 							<button onClick={blockScroll}>Manual Block</button>
