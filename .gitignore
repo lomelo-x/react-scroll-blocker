@@ -11,3 +11,4 @@ yarn-error.log*
 node_modules
 dist
 examples/dist
+package-lock.json
