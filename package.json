@@ -33,6 +33,7 @@
 		"react-dom": ">=16.8.0"
 	},
 	"devDependencies": {
+		"@rollup/plugin-typescript": "^11.0.0",
 		"@types/react": "^18.2.0",
 		"@types/react-dom": "^18.2.0",
 		"@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -44,7 +45,6 @@
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"rollup": "^3.0.0",
-		"@rollup/plugin-typescript": "^11.0.0",
 		"rollup-plugin-dts": "^6.0.0",
 		"tslib": "^2.6.0",
 		"typescript": "^5.0.0"
@@ -56,5 +56,8 @@
 	"bugs": {
 		"url": "https://github.com/lomelo-x/react-scroll-blocker/issues"
 	},
-	"homepage": "https://github.com/lomelo-x/react-scroll-blocker#readme"
+	"homepage": "https://lomelo-x.github.io/react-scroll-blocker/",
+	"dependencies": {
+		"react-scroll-blocker": "^1.0.0"
+	}
 }
