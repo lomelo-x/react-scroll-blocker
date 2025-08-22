@@ -5,6 +5,8 @@
 [![npm version](https://img.shields.io/npm/v/react-scroll-blocker.svg)](https://www.npmjs.com/package/react-scroll-blocker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## 🌐 [**Try the Interactive Demo →**](https://lomelo-x.github.io/react-scroll-blocker/)
+
 ## Why React Scroll Blocker?
 
 This library was created as a modern alternative to [`react-scrolllock`](https://github.com/jossmac/react-scrolllock), which is no longer maintained and doesn't support React 18. React Scroll Blocker provides the same functionality with modern React practices, TypeScript support, and React 18 compatibility.
