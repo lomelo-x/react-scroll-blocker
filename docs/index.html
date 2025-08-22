@@ -200,8 +200,8 @@
 			const useScrollBlocker = (isBlocked = false) => {
 				const [blocked, setBlocked] = React.useState(isBlocked)
 
-				const blockScroll = () => setBlocked(true)
-				const unblockScroll = () => setBlocked(false)
+				const blockScroll = React.useCallback(() => setBlocked(true), [])
+				const unblockScroll = React.useCallback(() => setBlocked(false), [])
 
 				React.useEffect(() => {
 					if (!blocked) return
@@ -222,6 +222,11 @@
 					}
 				}, [blocked])
 
+				// Sync external prop with internal state
+				React.useEffect(() => {
+					setBlocked(isBlocked)
+				}, [isBlocked])
+
 				return { blockScroll, unblockScroll, isBlocked: blocked }
 			}
 
@@ -230,7 +235,7 @@
 				const [scrollableModalOpen, setScrollableModalOpen] =
 					React.useState(false)
 				const [isBlocked, setIsBlocked] = React.useState(false)
-				const { blockScroll, unblockScroll } = useScrollBlocker(isBlocked)
+				const { blockScroll, unblockScroll, isBlocked: hookBlocked } = useScrollBlocker()
 
 				return (
 					<div>
@@ -303,11 +308,11 @@ function MyModal() {
 						<div className='demo-section'>
 							<h2>🎮 useScrollBlocker Hook</h2>
 							<p>Programmatic control over scroll blocking.</p>
-							<div className={`status ${isBlocked ? 'blocked' : 'unblocked'}`}>
-								Scroll Status: {isBlocked ? 'BLOCKED' : 'UNBLOCKED'}
+							<div className={`status ${hookBlocked ? 'blocked' : 'unblocked'}`}>
+								Scroll Status: {hookBlocked ? 'BLOCKED' : 'UNBLOCKED'}
 							</div>
-							<button onClick={() => setIsBlocked(!isBlocked)}>
-								{isBlocked ? 'Unblock' : 'Block'} Scroll
+							<button onClick={() => hookBlocked ? unblockScroll() : blockScroll()}>
+								{hookBlocked ? 'Unblock' : 'Block'} Scroll
 							</button>
 							<button onClick={blockScroll}>Manual Block</button>
 							<button onClick={unblockScroll}>Manual Unblock</button>
