@@ -1,6 +1,7 @@
 {
 	"name": "react-scroll-blocker",
 	"version": "1.0.2",
+	"type": "module",
 	"description": "A modern React 18 compatible scroll lock component for preventing body scroll",
 	"main": "dist/index.js",
 	"module": "dist/index.esm.js",
@@ -36,11 +37,12 @@
 		"@rollup/plugin-typescript": "^11.0.0",
 		"@types/react": "^18.2.0",
 		"@types/react-dom": "^18.2.0",
-		"@typescript-eslint/eslint-plugin": "^6.0.0",
-		"@typescript-eslint/parser": "^6.0.0",
-		"eslint": "^8.0.0",
-		"eslint-plugin-react": "^7.33.0",
-		"eslint-plugin-react-hooks": "^4.6.0",
+		"@typescript-eslint/eslint-plugin": "^8.0.0",
+		"@typescript-eslint/parser": "^8.0.0",
+		"eslint": "^9.0.0",
+		"eslint-plugin-react": "^7.35.0",
+		"eslint-plugin-react-hooks": "^5.0.0",
+		"globals": "^15.0.0",
 		"jest": "^29.0.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
@@ -56,8 +58,5 @@
 	"bugs": {
 		"url": "https://github.com/lomelo-x/react-scroll-blocker/issues"
 	},
-	"homepage": "https://lomelo-x.github.io/react-scroll-blocker/",
-	"dependencies": {
-		"react-scroll-blocker": "^1.0.0"
-	}
+	"homepage": "https://lomelo-x.github.io/react-scroll-blocker/"
 }
