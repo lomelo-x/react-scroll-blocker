@@ -25,17 +25,23 @@ export function getScrollbarWidth(): number {
 }
 
 /**
- * Checks if the current device is iOS
+ * Checks if the current device is iOS (mobile devices only, not macOS)
  */
 export function isIOS(): boolean {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+  // More precise iOS detection that excludes macOS
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && 
+         !window.MSStream && 
+         'ontouchstart' in window &&
+         !/Macintosh/.test(navigator.userAgent);
 }
 
 /**
- * Prevents the default behavior of an event
+ * Safely prevents the default behavior of an event if it's cancelable
  */
 export function preventDefault(event: Event): void {
-  event.preventDefault();
+  if (event.cancelable) {
+    event.preventDefault();
+  }
 }
 
 /**

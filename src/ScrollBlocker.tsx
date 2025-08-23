@@ -60,10 +60,13 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
       // iOS Safari doesn't respect overflow: hidden on body, so we need to prevent touchmove
       if (isIOS()) {
         const preventTouchMove = (event: TouchEvent) => {
-          // Only prevent if the touch isn't on a scrollable element
+          // Only prevent scrolling, not all touch interactions
           const target = event.target as Element;
           if (!target.closest('[data-scroll-lock-scrollable]')) {
-            preventDefault(event);
+            // Only prevent if this is actually a scroll movement and event is cancelable
+            if (event.cancelable && event.type === 'touchmove') {
+              preventDefault(event);
+            }
           }
         };
 
