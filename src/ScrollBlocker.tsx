@@ -18,6 +18,35 @@ const originalBodyStyles = {
 }
 
 /**
+ * Global touch move listener reference for cleanup
+ */
+let globalTouchMoveListener: ((event: TouchEvent) => void) | null = null
+
+/**
+ * Reset ScrollBlocker global state - useful for navigation cleanup
+ */
+export const resetScrollBlocker = (): void => {
+	lockCounter = 0
+	
+	// Restore body styles
+	const body = document.body
+	body.style.overflow = originalBodyStyles.overflow || ''
+	body.style.paddingRight = originalBodyStyles.paddingRight || ''
+	
+	// Remove any lingering touch event listeners
+	if (globalTouchMoveListener) {
+		document.removeEventListener('touchmove', globalTouchMoveListener)
+		globalTouchMoveListener = null
+	}
+	
+	// Clean up any data attributes
+	const existingElements = document.querySelectorAll('[data-scroll-lock-scrollable]')
+	existingElements.forEach(el => {
+		el.removeAttribute('data-scroll-lock-scrollable')
+	})
+}
+
+/**
  * ScrollBlocker component that prevents scrolling on the document body.
  *
  * Features:
@@ -43,6 +72,21 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 
 		// Increment the lock counter
 		lockCounter++
+		
+		// Add navigation cleanup listener (for Next.js/SPA navigation)
+		const handleBeforeUnload = () => {
+			if (lockCounter > 0) {
+				resetScrollBlocker()
+			}
+		}
+		
+		// Listen for both page unload and visibility changes (SPA navigation)
+		window.addEventListener('beforeunload', handleBeforeUnload)
+		document.addEventListener('visibilitychange', () => {
+			if (document.hidden && lockCounter > 0) {
+				resetScrollBlocker()
+			}
+		})
 
 		// Store original styles only on the first lock
 		if (lockCounter === 1) {
@@ -61,6 +105,11 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 
 			// iOS Safari doesn't respect overflow: hidden on body, so we need to prevent touchmove
 			if (isIOS()) {
+				// Remove any existing global listener first
+				if (globalTouchMoveListener) {
+					document.removeEventListener('touchmove', globalTouchMoveListener)
+				}
+				
 				const preventTouchMove = (event: TouchEvent) => {
 					// Only prevent scrolling, not all touch interactions
 					const target = event.target as Element
@@ -72,6 +121,7 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 					}
 				}
 
+				globalTouchMoveListener = preventTouchMove
 				touchMoveListenerRef.current = preventTouchMove
 				document.addEventListener('touchmove', preventTouchMove, {
 					passive: false,
@@ -82,6 +132,9 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 		// Cleanup function
 		return () => {
 			lockCounter--
+
+			// Remove navigation listeners
+			window.removeEventListener('beforeunload', handleBeforeUnload)
 
 			// Only restore styles when all locks are removed
 			if (lockCounter === 0) {
@@ -96,6 +149,7 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 						touchMoveListenerRef.current,
 					)
 					touchMoveListenerRef.current = null
+					globalTouchMoveListener = null
 				}
 			}
 		}

@@ -5,7 +5,7 @@
  * Inspired by react-scrolllock but built with modern React practices.
  */
 
-export { default as ScrollBlocker } from './ScrollBlocker'
+export { default as ScrollBlocker, resetScrollBlocker } from './ScrollBlocker'
 export { default as TouchScrollable } from './TouchScrollable'
 export { useScrollBlocker } from './useScrollBlocker'
 export type { ScrollBlockerProps, TouchScrollableProps } from './types'
