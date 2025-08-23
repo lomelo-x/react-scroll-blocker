@@ -16,8 +16,21 @@ export default [
         sourcemap: true,
       },
     ],
-    plugins: [typescript()],
-    external: ['react', 'react-dom'],
+    plugins: [
+      typescript({
+        jsx: 'react-jsx', // Use modern JSX transform
+        target: 'es2018',
+      })
+    ],
+    external: (id) => {
+      // More comprehensive external check
+      return id === 'react' || 
+             id === 'react-dom' || 
+             id === 'react/jsx-runtime' ||
+             id === 'react/jsx-dev-runtime' ||
+             id.startsWith('react/') ||
+             id.startsWith('react-dom/')
+    },
   },
   {
     input: 'src/index.ts',
