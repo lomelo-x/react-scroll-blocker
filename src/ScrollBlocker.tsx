@@ -15,21 +15,36 @@ let instanceCounter = 0
 const generateInstanceId = () => `scroll-blocker-${++instanceCounter}`
 
 /**
+ * Global type for storing original styles on window object
+ */
+declare global {
+	interface Window {
+		__scrollBlockerOriginalStyles?: {
+			overflow: string
+			paddingRight: string
+		}
+	}
+}
+
+/**
  * Reset all ScrollBlocker instances - useful for emergency cleanup
  */
 export const resetScrollBlocker = (): void => {
 	// Clear all active instances
 	activeBlockers.clear()
-	
+
 	// Restore body styles to default
 	const body = document.body
 	body.style.overflow = ''
 	body.style.paddingRight = ''
-	
+
+	// Clean up global original styles reference
+	delete window.__scrollBlockerOriginalStyles
+
 	// Remove all touch event listeners
 	const clonedBody = body.cloneNode(true) as HTMLElement
 	body.parentNode?.replaceChild(clonedBody, body)
-	
+
 	// Clean up any data attributes
 	const existingElements = document.querySelectorAll(
 		'[data-scroll-lock-scrollable]',
@@ -56,8 +71,9 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 }) => {
 	const [isBlocking, setIsBlocking] = useState(false)
 	const instanceIdRef = useRef<string>()
-	const originalStylesRef = useRef({ overflow: '', paddingRight: '' })
-	const touchMoveListenerRef = useRef<((event: TouchEvent) => void) | null>(null)
+	const touchMoveListenerRef = useRef<((event: TouchEvent) => void) | null>(
+		null,
+	)
 
 	// Generate unique instance ID on first render
 	if (!instanceIdRef.current) {
@@ -72,17 +88,21 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 		const instanceId = instanceIdRef.current!
 		const body = document.body
 
-		// Store original styles for this instance
-		originalStylesRef.current.overflow = body.style.overflow
-		originalStylesRef.current.paddingRight = body.style.paddingRight
-
 		// Add this instance to active set
 		activeBlockers.add(instanceId)
 
 		// Apply scroll blocking styles (only if first instance)
 		if (activeBlockers.size === 1) {
+			// Store the ORIGINAL styles globally on first instance only
+			if (!window.__scrollBlockerOriginalStyles) {
+				window.__scrollBlockerOriginalStyles = {
+					overflow: body.style.overflow,
+					paddingRight: body.style.paddingRight,
+				}
+			}
+
 			const scrollbarWidth = accountForScrollbars ? getScrollbarWidth() : 0
-			
+
 			body.style.overflow = 'hidden'
 			if (scrollbarWidth > 0 && accountForScrollbars) {
 				body.style.paddingRight = `${scrollbarWidth}px`
@@ -115,12 +135,19 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 
 			// Only restore styles when no more active blockers
 			if (activeBlockers.size === 0) {
-				body.style.overflow = originalStylesRef.current.overflow
-				body.style.paddingRight = originalStylesRef.current.paddingRight
+				const originalStyles = window.__scrollBlockerOriginalStyles
+				body.style.overflow = originalStyles?.overflow || ''
+				body.style.paddingRight = originalStyles?.paddingRight || ''
+
+				// Clean up global reference
+				delete window.__scrollBlockerOriginalStyles
 
 				// Remove touch listener
 				if (touchMoveListenerRef.current) {
-					document.removeEventListener('touchmove', touchMoveListenerRef.current)
+					document.removeEventListener(
+						'touchmove',
+						touchMoveListenerRef.current,
+					)
 					touchMoveListenerRef.current = null
 				}
 			}
