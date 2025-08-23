@@ -10,7 +10,8 @@ export function getScrollbarWidth(): number {
 	const outer = document.createElement('div')
 	outer.style.visibility = 'hidden'
 	outer.style.overflow = 'scroll'
-	;(outer.style as any).msOverflowStyle = 'scrollbar' // needed for WinJS apps
+	;(outer.style as unknown as Record<string, string>).msOverflowStyle =
+		'scrollbar' // needed for WinJS apps
 	document.body.appendChild(outer)
 
 	const inner = document.createElement('div')
@@ -31,7 +32,7 @@ export function isIOS(): boolean {
 	// More precise iOS detection that excludes macOS
 	return (
 		/iPad|iPhone|iPod/.test(navigator.userAgent) &&
-		!(window as any).MSStream &&
+		!(window as unknown as Record<string, unknown>).MSStream &&
 		'ontouchstart' in window &&
 		!/Macintosh/.test(navigator.userAgent)
 	)
