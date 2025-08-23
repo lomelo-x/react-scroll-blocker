@@ -56,8 +56,5 @@
 	"bugs": {
 		"url": "https://github.com/lomelo-x/react-scroll-blocker/issues"
 	},
-	"homepage": "https://lomelo-x.github.io/react-scroll-blocker/",
-	"dependencies": {
-		"react-scroll-blocker": "^1.0.0"
-	}
+	"homepage": "https://lomelo-x.github.io/react-scroll-blocker/"
 }
