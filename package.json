@@ -1,6 +1,6 @@
 {
 	"name": "react-scroll-blocker",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "A modern React 18 compatible scroll lock component for preventing body scroll",
 	"main": "dist/index.js",
 	"module": "dist/index.esm.js",
