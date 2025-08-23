@@ -1,47 +1,40 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ScrollBlockerProps } from './types'
 import { getScrollbarWidth, isIOS, preventDefault } from './utils'
 import TouchScrollable from './TouchScrollable'
 
 /**
- * A counter to track how many ScrollBlocker instances are active.
- * This allows multiple modals/components to use ScrollBlocker without conflicts.
+ * Track active ScrollBlocker instances using a Set for better management
  */
-let lockCounter = 0
+const activeBlockers = new Set<string>()
 
 /**
- * Store original body styles to restore them later
+ * Generate unique ID for each ScrollBlocker instance
  */
-const originalBodyStyles = {
-	overflow: '',
-	paddingRight: '',
-}
+let instanceCounter = 0
+const generateInstanceId = () => `scroll-blocker-${++instanceCounter}`
 
 /**
- * Global touch move listener reference for cleanup
- */
-let globalTouchMoveListener: ((event: TouchEvent) => void) | null = null
-
-/**
- * Reset ScrollBlocker global state - useful for navigation cleanup
+ * Reset all ScrollBlocker instances - useful for emergency cleanup
  */
 export const resetScrollBlocker = (): void => {
-	lockCounter = 0
+	// Clear all active instances
+	activeBlockers.clear()
 	
-	// Restore body styles
+	// Restore body styles to default
 	const body = document.body
-	body.style.overflow = originalBodyStyles.overflow || ''
-	body.style.paddingRight = originalBodyStyles.paddingRight || ''
+	body.style.overflow = ''
+	body.style.paddingRight = ''
 	
-	// Remove any lingering touch event listeners
-	if (globalTouchMoveListener) {
-		document.removeEventListener('touchmove', globalTouchMoveListener)
-		globalTouchMoveListener = null
-	}
+	// Remove all touch event listeners
+	const clonedBody = body.cloneNode(true) as HTMLElement
+	body.parentNode?.replaceChild(clonedBody, body)
 	
 	// Clean up any data attributes
-	const existingElements = document.querySelectorAll('[data-scroll-lock-scrollable]')
-	existingElements.forEach(el => {
+	const existingElements = document.querySelectorAll(
+		'[data-scroll-lock-scrollable]',
+	)
+	existingElements.forEach((el) => {
 		el.removeAttribute('data-scroll-lock-scrollable')
 	})
 }
@@ -61,67 +54,51 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 	accountForScrollbars = true,
 	children,
 }) => {
-	const touchMoveListenerRef = useRef<((event: TouchEvent) => void) | null>(
-		null,
-	)
+	const [isBlocking, setIsBlocking] = useState(false)
+	const instanceIdRef = useRef<string>()
+	const originalStylesRef = useRef({ overflow: '', paddingRight: '' })
+	const touchMoveListenerRef = useRef<((event: TouchEvent) => void) | null>(null)
+
+	// Generate unique instance ID on first render
+	if (!instanceIdRef.current) {
+		instanceIdRef.current = generateInstanceId()
+	}
 
 	useEffect(() => {
-		if (!isActive) {
+		if (!isActive || isBlocking) {
 			return
 		}
 
-		// Increment the lock counter
-		lockCounter++
-		
-		// Add navigation cleanup listener (for Next.js/SPA navigation)
-		const handleBeforeUnload = () => {
-			if (lockCounter > 0) {
-				resetScrollBlocker()
-			}
-		}
-		
-		// Listen for both page unload and visibility changes (SPA navigation)
-		window.addEventListener('beforeunload', handleBeforeUnload)
-		document.addEventListener('visibilitychange', () => {
-			if (document.hidden && lockCounter > 0) {
-				resetScrollBlocker()
-			}
-		})
+		const instanceId = instanceIdRef.current!
+		const body = document.body
 
-		// Store original styles only on the first lock
-		if (lockCounter === 1) {
-			const body = document.body
-			originalBodyStyles.overflow = body.style.overflow
-			originalBodyStyles.paddingRight = body.style.paddingRight
+		// Store original styles for this instance
+		originalStylesRef.current.overflow = body.style.overflow
+		originalStylesRef.current.paddingRight = body.style.paddingRight
 
-			// Calculate scrollbar width and apply styles
+		// Add this instance to active set
+		activeBlockers.add(instanceId)
+
+		// Apply scroll blocking styles (only if first instance)
+		if (activeBlockers.size === 1) {
 			const scrollbarWidth = accountForScrollbars ? getScrollbarWidth() : 0
-
+			
 			body.style.overflow = 'hidden'
-
 			if (scrollbarWidth > 0 && accountForScrollbars) {
 				body.style.paddingRight = `${scrollbarWidth}px`
 			}
 
-			// iOS Safari doesn't respect overflow: hidden on body, so we need to prevent touchmove
+			// iOS Safari touch handling
 			if (isIOS()) {
-				// Remove any existing global listener first
-				if (globalTouchMoveListener) {
-					document.removeEventListener('touchmove', globalTouchMoveListener)
-				}
-				
 				const preventTouchMove = (event: TouchEvent) => {
-					// Only prevent scrolling, not all touch interactions
 					const target = event.target as Element
 					if (!target.closest('[data-scroll-lock-scrollable]')) {
-						// Only prevent if this is actually a scroll movement and event is cancelable
 						if (event.cancelable && event.type === 'touchmove') {
 							preventDefault(event)
 						}
 					}
 				}
 
-				globalTouchMoveListener = preventTouchMove
 				touchMoveListenerRef.current = preventTouchMove
 				document.addEventListener('touchmove', preventTouchMove, {
 					passive: false,
@@ -129,31 +106,26 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 			}
 		}
 
-		// Cleanup function
+		setIsBlocking(true)
+
+		// Cleanup function - component-scoped
 		return () => {
-			lockCounter--
+			activeBlockers.delete(instanceId)
+			setIsBlocking(false)
 
-			// Remove navigation listeners
-			window.removeEventListener('beforeunload', handleBeforeUnload)
+			// Only restore styles when no more active blockers
+			if (activeBlockers.size === 0) {
+				body.style.overflow = originalStylesRef.current.overflow
+				body.style.paddingRight = originalStylesRef.current.paddingRight
 
-			// Only restore styles when all locks are removed
-			if (lockCounter === 0) {
-				const body = document.body
-				body.style.overflow = originalBodyStyles.overflow
-				body.style.paddingRight = originalBodyStyles.paddingRight
-
-				// Remove iOS touch move listener
+				// Remove touch listener
 				if (touchMoveListenerRef.current) {
-					document.removeEventListener(
-						'touchmove',
-						touchMoveListenerRef.current,
-					)
+					document.removeEventListener('touchmove', touchMoveListenerRef.current)
 					touchMoveListenerRef.current = null
-					globalTouchMoveListener = null
 				}
 			}
 		}
-	}, [isActive, accountForScrollbars])
+	}, [isActive, accountForScrollbars, isBlocking])
 
 	// If children are provided, wrap them in TouchScrollable
 	if (children) {
