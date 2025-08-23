@@ -21,6 +21,7 @@ declare global {
 	interface Window {
 		__scrollBlockerOriginalStyles?: {
 			overflow: string
+			position: string
 			paddingRight: string
 		}
 	}
@@ -36,6 +37,7 @@ export const resetScrollBlocker = (): void => {
 	// Restore body styles to default
 	const body = document.body
 	body.style.overflow = ''
+	body.style.position = ''
 	body.style.paddingRight = ''
 
 	// Clean up global original styles reference
@@ -97,6 +99,7 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 			if (!window.__scrollBlockerOriginalStyles) {
 				window.__scrollBlockerOriginalStyles = {
 					overflow: body.style.overflow,
+					position: body.style.position,
 					paddingRight: body.style.paddingRight,
 				}
 			}
@@ -104,6 +107,7 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 			const scrollbarWidth = accountForScrollbars ? getScrollbarWidth() : 0
 
 			body.style.overflow = 'hidden'
+			body.style.position = 'relative' // ← Add this line!
 			if (scrollbarWidth > 0 && accountForScrollbars) {
 				body.style.paddingRight = `${scrollbarWidth}px`
 			}
@@ -137,6 +141,7 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 			if (activeBlockers.size === 0) {
 				const originalStyles = window.__scrollBlockerOriginalStyles
 				body.style.overflow = originalStyles?.overflow || ''
+				body.style.position = originalStyles?.position || ''
 				body.style.paddingRight = originalStyles?.paddingRight || ''
 
 				// Clean up global reference
