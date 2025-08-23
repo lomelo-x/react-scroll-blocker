@@ -157,7 +157,7 @@ const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
 				}
 			}
 		}
-	}, [isActive, accountForScrollbars, isBlocking])
+	}, [isActive, accountForScrollbars])
 
 	// If children are provided, wrap them in TouchScrollable
 	if (children) {
