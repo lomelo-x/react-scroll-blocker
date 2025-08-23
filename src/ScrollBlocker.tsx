@@ -1,25 +1,25 @@
-import React, { useEffect, useRef } from 'react';
-import { ScrollBlockerProps } from './types';
-import { getScrollbarWidth, isIOS, preventDefault } from './utils';
-import TouchScrollable from './TouchScrollable';
+import React, { useEffect, useRef } from 'react'
+import { ScrollBlockerProps } from './types'
+import { getScrollbarWidth, isIOS, preventDefault } from './utils'
+import TouchScrollable from './TouchScrollable'
 
 /**
  * A counter to track how many ScrollBlocker instances are active.
  * This allows multiple modals/components to use ScrollBlocker without conflicts.
  */
-let lockCounter = 0;
+let lockCounter = 0
 
 /**
  * Store original body styles to restore them later
  */
 const originalBodyStyles = {
-  overflow: '',
-  paddingRight: '',
-};
+	overflow: '',
+	paddingRight: '',
+}
 
 /**
  * ScrollBlocker component that prevents scrolling on the document body.
- * 
+ *
  * Features:
  * - Prevents body scroll when mounted and active
  * - Accounts for scrollbar width to prevent layout shift
@@ -28,78 +28,85 @@ const originalBodyStyles = {
  * - Allows specific child elements to remain scrollable
  */
 const ScrollBlocker: React.FC<ScrollBlockerProps> = ({
-  isActive = true,
-  accountForScrollbars = true,
-  children,
+	isActive = true,
+	accountForScrollbars = true,
+	children,
 }) => {
-  const touchMoveListenerRef = useRef<((event: TouchEvent) => void) | null>(null);
+	const touchMoveListenerRef = useRef<((event: TouchEvent) => void) | null>(
+		null,
+	)
 
-  useEffect(() => {
-    if (!isActive) {
-      return;
-    }
+	useEffect(() => {
+		if (!isActive) {
+			return
+		}
 
-    // Increment the lock counter
-    lockCounter++;
+		// Increment the lock counter
+		lockCounter++
 
-    // Store original styles only on the first lock
-    if (lockCounter === 1) {
-      const body = document.body;
-      originalBodyStyles.overflow = body.style.overflow;
-      originalBodyStyles.paddingRight = body.style.paddingRight;
+		// Store original styles only on the first lock
+		if (lockCounter === 1) {
+			const body = document.body
+			originalBodyStyles.overflow = body.style.overflow
+			originalBodyStyles.paddingRight = body.style.paddingRight
 
-      // Calculate scrollbar width and apply styles
-      const scrollbarWidth = accountForScrollbars ? getScrollbarWidth() : 0;
-      
-      body.style.overflow = 'hidden';
-      
-      if (scrollbarWidth > 0 && accountForScrollbars) {
-        body.style.paddingRight = `${scrollbarWidth}px`;
-      }
+			// Calculate scrollbar width and apply styles
+			const scrollbarWidth = accountForScrollbars ? getScrollbarWidth() : 0
 
-      // iOS Safari doesn't respect overflow: hidden on body, so we need to prevent touchmove
-      if (isIOS()) {
-        const preventTouchMove = (event: TouchEvent) => {
-          // Only prevent scrolling, not all touch interactions
-          const target = event.target as Element;
-          if (!target.closest('[data-scroll-lock-scrollable]')) {
-            // Only prevent if this is actually a scroll movement and event is cancelable
-            if (event.cancelable && event.type === 'touchmove') {
-              preventDefault(event);
-            }
-          }
-        };
+			body.style.overflow = 'hidden'
 
-        touchMoveListenerRef.current = preventTouchMove;
-        document.addEventListener('touchmove', preventTouchMove, { passive: false });
-      }
-    }
+			if (scrollbarWidth > 0 && accountForScrollbars) {
+				body.style.paddingRight = `${scrollbarWidth}px`
+			}
 
-    // Cleanup function
-    return () => {
-      lockCounter--;
+			// iOS Safari doesn't respect overflow: hidden on body, so we need to prevent touchmove
+			if (isIOS()) {
+				const preventTouchMove = (event: TouchEvent) => {
+					// Only prevent scrolling, not all touch interactions
+					const target = event.target as Element
+					if (!target.closest('[data-scroll-lock-scrollable]')) {
+						// Only prevent if this is actually a scroll movement and event is cancelable
+						if (event.cancelable && event.type === 'touchmove') {
+							preventDefault(event)
+						}
+					}
+				}
 
-      // Only restore styles when all locks are removed
-      if (lockCounter === 0) {
-        const body = document.body;
-        body.style.overflow = originalBodyStyles.overflow;
-        body.style.paddingRight = originalBodyStyles.paddingRight;
+				touchMoveListenerRef.current = preventTouchMove
+				document.addEventListener('touchmove', preventTouchMove, {
+					passive: false,
+				})
+			}
+		}
 
-        // Remove iOS touch move listener
-        if (touchMoveListenerRef.current) {
-          document.removeEventListener('touchmove', touchMoveListenerRef.current);
-          touchMoveListenerRef.current = null;
-        }
-      }
-    };
-  }, [isActive, accountForScrollbars]);
+		// Cleanup function
+		return () => {
+			lockCounter--
 
-  // If children are provided, wrap them in TouchScrollable
-  if (children) {
-    return <TouchScrollable>{children}</TouchScrollable>;
-  }
+			// Only restore styles when all locks are removed
+			if (lockCounter === 0) {
+				const body = document.body
+				body.style.overflow = originalBodyStyles.overflow
+				body.style.paddingRight = originalBodyStyles.paddingRight
 
-  return null;
-};
+				// Remove iOS touch move listener
+				if (touchMoveListenerRef.current) {
+					document.removeEventListener(
+						'touchmove',
+						touchMoveListenerRef.current,
+					)
+					touchMoveListenerRef.current = null
+				}
+			}
+		}
+	}, [isActive, accountForScrollbars])
 
-export default ScrollBlocker;
+	// If children are provided, wrap them in TouchScrollable
+	if (children) {
+		return <TouchScrollable>{children}</TouchScrollable>
+	}
+
+	return null
+}
+
+export default ScrollBlocker
